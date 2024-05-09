@@ -3,7 +3,7 @@ from flask_cors import CORS
 import paramiko
 import requests
 from urllib.parse import quote
-
+import mariadb
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +16,29 @@ linesSorted = None
 linesAffilsNames = []
 
 
+def excuteSQL(qry):
+        try:
+            conn = mariadb.connect(user="nobody", password="zoalekri", host="mysql.nber.org", database="nber_mysql")
+            print("Connected successfully to MariaDB!")
+        except mariadb.Error as e:
+            print(f"Error connecting to MariaDB: {e}")
+            return "SOMETHING WENT WRONG" 
+        cur = conn.cursor()
+
+        try:
+                cur.execute(qry)
+                conn.commit()
+                print("success!!")
+        except mariadb.Error as e:
+            print(f"Error updating data: {e}")
+             
+        cur.close()
+        conn.close()
+        return cur.fetchall()
+
+
+
+         
 
 def levReplacement(str1, str2):
         # Declaring array 'D' with rows = len(a) + 1 and columns = len(b) + 1:
@@ -93,7 +116,9 @@ def init():
        
     #   linesAffils.append(temp[1])
      #  linesAffilsNames.append(temp[0])
-    
+
+
+    #excuteSQL("select user, univaffil from people where user is not null and univaffil is not null order by univaffil asc")    
     url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql=select%20user%2c%20univaffil%20from%20people%20where%20user%20is%20not%20null%20and%20univaffil%20is%20not%20null%20order%20by%20univaffil%20asc'
     cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'} #when my account is deactivated this code will stop working!
     response = requests.get(url,cookies=cookie)
