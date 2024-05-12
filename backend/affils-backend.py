@@ -21,7 +21,7 @@ def excuteSQL(qry):
         # I am not sure where the password file is but if you could replace the /path/to... in the open function this code below should read 
         #from the file and set the first line equal to password, if the password is not on the first line put in the correct line using the lines array! 
         #keep in mind the readlines function splits based off of \n characters but keeps them in I am 99% sure so this could be a cause for errors
-        #with open('/path/to/password/file.txt', 'r'):
+        #with open('/etc/mysql_nobody_password.txt', 'r'):
          #       lines = file.readlines()
         #password = lines[0]
         try:
