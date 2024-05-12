@@ -17,8 +17,15 @@ linesAffilsNames = []
 
 
 def excuteSQL(qry):
+        password = 'zoalekri'
+        # I am not sure where the password file is but if you could replace the /path/to... in the open function this code below should read 
+        #from the file and set the first line equal to password, if the password is not on the first line put in the correct line using the lines array! 
+        #keep in mind the readlines function splits based off of \n characters but keeps them in I am 99% sure so this could be a cause for errors
+        #with open('/path/to/password/file.txt', 'r'):
+         #       lines = file.readlines()
+        #password = lines[0]
         try:
-            conn = mariadb.connect(user="nobody", password="zoalekri", host="mysql.nber.org", database="nber_mysql")
+            conn = mariadb.connect(user="nobody", password=password, host="mysql.nber.org", database="nber_mysql")
             print("Connected successfully to MariaDB!")
         except mariadb.Error as e:
             print(f"Error connecting to MariaDB: {e}")
@@ -118,20 +125,21 @@ def init():
      #  linesAffilsNames.append(temp[0])
 
 
-    #excuteSQL("select user, univaffil from people where user is not null and univaffil is not null order by univaffil asc")    
-    url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql=select%20user%2c%20univaffil%20from%20people%20where%20user%20is%20not%20null%20and%20univaffil%20is%20not%20null%20order%20by%20univaffil%20asc'
-    cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'} #when my account is deactivated this code will stop working!
-    response = requests.get(url,cookies=cookie)
-    if response.status_code == 200:
+    response = excuteSQL("SELECT user, univaffil FROM people WHERE user IS NOT NULL AND univaffil IS NOT NULL ORDER BY univaffil ASC")    
+    #url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql=select%20user%2c%20univaffil%20from%20people%20where%20user%20is%20not%20null%20and%20univaffil%20is%20not%20null%20order%20by%20univaffil%20asc'
+    #cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'} #when my account is deactivated this code will stop working!
+    #response = requests.get(url,cookies=cookie)
+    if response != "SOMETHING WENT WRONG":
         # Print the JSON data returned by the API
         #print(response.json())
        print('Ok')
 
     else:
         # Print an error message if the request failed
-        print('Error:', response.status_code)
+        print('Error:' + response)
 
-    db_return =response.json()
+    #db_return =response.json()
+    db_return = response
     print(len(db_return))
 
     for i in range(len(db_return)):
@@ -263,21 +271,20 @@ def UniversalReplace():
     torf = data['torf']
     if torf:
        
-       url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql=select%20user%20%2c%20univaffil%20from%20people%20where%20univaffil%20like%20%22University%20of%20California%2c%25%22'
-       cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'} #when my account is deactivated this code will stop working!
-       response = requests.get(url,cookies=cookie)
-       if response.status_code == 200:
+       #url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql=select%20user%20%2c%20univaffil%20from%20people%20where%20univaffil%20like%20%22University%20of%20California%2c%25%22'
+       #cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'} #when my account is deactivated this code will stop working!
+       #response = requests.get(url,cookies=cookie)
+       response = excuteSQL(repr("select user, univaffil from people where univaffil like '%University of California,%'"))    
+       if response == "SOMETHING WENT WRONG":
         # Print the JSON data returned by the API
-        print(response.json())
-
-       else:
-        # Print an error message if the request failed
+        #print(response.json())
         print('Error:', response.status_code)
 
 
 
 
-       db_return =response.json()
+       #db_return =response.json()
+       db_return =response
         
        changes = []
        for i in range(len(db_return)):
@@ -286,20 +293,24 @@ def UniversalReplace():
             if len(newparts) == 2:
                 newAffil = newparts[0] + ' at' + newparts[1] 
                 temp = f"update people set univaffil = '{newAffil}' where user = '{db_return[i]['user']}'"
-                changes.append(quote(temp))
+                changes.append(temp)
        #run the changes list and update each occurence 
 
       
        for i in range(len(changes)):
           print(changes[i])
+          executeSQL(repr(changes[i]))
        
     else:
-        url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql='
-        cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'}
+        #url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql='
+        #cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'}
+        
 
         sql = f"update people set univaffil = '{str(newValue).strip()}' where univaffil = '{oldValue}'"
-        url += quote(sql)
-        print(url)
+        response = excuteSQL(repr(sql))
+        #url += quote(sql)
+        #print(url)
+        
         #response = requests.get(url,cookies=cookie)
         
     return 'OK'
@@ -317,12 +328,14 @@ def replaceAffil():
     if affil != '' and newAffil != '' and user != '':
         
         
-        url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql='
-        cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'}
+        #url = 'https://backdev.nber.org/cgi-bin//backend_mysql.pl?sql='
+        #cookie = {'STYXKEY_username_ticket_cookie': '702214287-zach_hixson'}
 
         sql = f"update people set univaffil = '{str(newAffil).strip()}' where user = '{user}' and univaffil = '{affil}'"
-        url += quote(sql)
-        print(url)
+        executeSQL(repr(sql))
+        #url += quote(sql)
+            
+        #print(url)
         #response = requests.get(url,cookies=cookie)
 
     return 'OK'
